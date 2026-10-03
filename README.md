@@ -11,7 +11,9 @@
 - [x] app: 骨格（セットリスト画面、ポケットモード画面）
 - [ ] ネイティブ音声層: 低遅延 再生＋録音（Android Oboe / iOS AVAudioEngine）
 - [ ] 音源分離: Demucs（ONNX Runtime）、チャンク処理
-- [ ] ピッチ推定: CREPE/YIN 実装
+- [x] ピッチ推定: YIN（純Dart、テスト付き）。CREPEは未着手
+- [x] 取り込み時のDRM判定（`checkImportable`）
+- [ ] ⚠ Demucs重みのライセンスが商用不可の可能性 → `docs/model-licenses.md`
 - [ ] 遅延補正UI、リモコン操作、音声読み上げ
 - [ ] 歌詞同期、課金（in_app_purchase）
 
