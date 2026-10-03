@@ -43,6 +43,7 @@ class _LatencyScreenState extends State<LatencyScreen> {
               value: _ms.clamp(0, 500),
               onChanged: (v) =>
                   setState(() => widget.library.latency.setMs(_output, v)),
+              onChangeEnd: (_) => widget.library.persist(),
             ),
             const Text('確認用ビートに合わせて声や手拍子で調整します。'
                 '（自動測定は録音エンジン実装後に接続）'),

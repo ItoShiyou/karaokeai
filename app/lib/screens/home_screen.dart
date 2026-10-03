@@ -37,6 +37,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _process(Song s) async {
+    final r = await widget.library.process(s);
+    if (!mounted) return;
+    final msg = switch (r) {
+      ProcessResult.done => null,
+      ProcessResult.limitReached => '無料枠（3曲）を使い切りました。買い切りで解除できます。',
+      ProcessResult.failed => 'この形式はまだ処理できません（現在はステレオWAVのみ）。',
+    };
+    if (msg != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final lib = widget.library;
@@ -69,6 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
             for (final s in lib.songs)
               ListTile(
                 title: Text(s.title),
+                subtitle: Text(lib.records
+                        .firstWhere((r) => r.song.id == s.id)
+                        .processed
+                    ? '声除去済み'
+                    : '未処理'),
+                onTap: () => _process(s),
                 trailing: IconButton(
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () => lib.remove(s),

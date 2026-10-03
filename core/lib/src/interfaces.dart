@@ -38,3 +38,7 @@ abstract class PitchEstimator {
   Future<PitchTrack> estimate(String audioPath);
   PitchTrack estimateSamples(List<double> samples, int sampleRate);
 }
+
+/// Default separator: model-free centre cancellation (see centre_cancel).
+/// ML separators implement [StemSeparator] once a model with a clear
+/// commercial licence is adopted (docs/model-licenses.md).
