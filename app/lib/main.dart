@@ -15,7 +15,7 @@ class KaraokeApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: const HomeScreen(),
+      home: HomeScreen(),
     );
   }
 }

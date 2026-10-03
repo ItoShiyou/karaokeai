@@ -13,7 +13,7 @@
 - [ ] 音源分離: Demucs（ONNX Runtime）、チャンク処理
 - [x] ピッチ推定: YIN（純Dart、テスト付き）。CREPEは未着手
 - [x] 取り込み時のDRM判定（`checkImportable`）
-- [ ] ⚠ Demucs重みのライセンスが商用不可の可能性 → `docs/model-licenses.md`
+- [x] Demucs重みは商用利用可として進める（前提。リリース前に裏取り） → `docs/model-licenses.md`
 - [ ] 遅延補正UI、リモコン操作、音声読み上げ
 - [ ] 歌詞同期、課金（in_app_purchase）
 
