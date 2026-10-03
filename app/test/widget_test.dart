@@ -42,4 +42,20 @@ void main() {
     expect(lib.latency.getMs('car'), isNotNull);
     expect(lib.latency.getMs('home'), isNull);
   });
+
+  testWidgets('lyrics need stopped confirmation, then save', (tester) async {
+    final lib = Library(headReader: (_) async => _mp4('mp4a'));
+    await tester.pumpWidget(_app(lib, const PickedFile('a.m4a', '/x/a.m4a')));
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.lyrics_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('停車中ですか？'), findsOneWidget);
+    await tester.tap(find.text('停車中です'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'la la');
+    await tester.tap(find.text('保存'));
+    await tester.pumpAndSettle();
+    expect(lib.records.single.lyrics, 'la la');
+  });
 }

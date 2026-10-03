@@ -62,10 +62,12 @@ class SongRecord {
     required this.song,
     required this.sourcePath,
     this.accompanimentPath,
+    this.lyrics = '',
   });
   final Song song;
   final String sourcePath;
   String? accompanimentPath;
+  String lyrics;
 
   bool get processed => accompanimentPath != null;
 }
@@ -119,6 +121,7 @@ class Library extends ChangeNotifier {
         song: Song(id: m['id'] as String, title: m['title'] as String),
         sourcePath: m['source'] as String,
         accompanimentPath: m['accompaniment'] as String?,
+        lyrics: (m['lyrics'] as String?) ?? '',
       ));
     }
     final lat = (j['latency'] as Map?)?.cast<String, Object?>() ?? const {};
@@ -144,6 +147,7 @@ class Library extends ChangeNotifier {
             'title': r.song.title,
             'source': r.sourcePath,
             'accompaniment': r.accompanimentPath,
+            'lyrics': r.lyrics,
           }
       ],
       'latency': {
@@ -152,6 +156,14 @@ class Library extends ChangeNotifier {
       },
       'entitlement': entitlement.toJson(),
     });
+  }
+
+  Future<void> setLyrics(Song s, String text) async {
+    final r = _find(s.id);
+    if (r == null) return;
+    r.lyrics = text;
+    notifyListeners();
+    await _save();
   }
 
   /// Call after changing latency or purchase state.

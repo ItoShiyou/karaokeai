@@ -4,6 +4,7 @@ import 'package:karaokeai_core/karaokeai_core.dart';
 
 import '../state/library.dart';
 import 'latency_screen.dart';
+import 'lyrics_screen.dart';
 import 'pocket_screen.dart';
 
 /// Pre-departure screen: import songs, build the setlist, start pocket mode.
@@ -50,6 +51,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Until the location layer reports speed, the user must confirm the car
+  /// is stopped before lyrics can be edited or shown.
+  Future<void> _openLyrics(Song s) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text('停車中ですか？'),
+        content: const Text('歌詞の表示・編集は停車中のみ行ってください。'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('いいえ')),
+          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('停車中です')),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => LyricsScreen(library: widget.library, song: s, speedKmh: 0)));
+  }
+
   @override
   Widget build(BuildContext context) {
     final lib = widget.library;
@@ -88,10 +108,17 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? '声除去済み'
                     : '未処理'),
                 onTap: () => _process(s),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline),
-                  onPressed: () => lib.remove(s),
-                ),
+                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                  IconButton(
+                    tooltip: '歌詞',
+                    icon: const Icon(Icons.lyrics_outlined),
+                    onPressed: () => _openLyrics(s),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline),
+                    onPressed: () => lib.remove(s),
+                  ),
+                ]),
               ),
             const Padding(
               padding: EdgeInsets.all(16),

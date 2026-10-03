@@ -15,6 +15,17 @@ class PitchTrack {
   /// Cents relative to 440Hz; null when unvoiced.
   double? centsAt(int i) => isVoicedAt(i) ? hzToCents(hz[i]) : null;
 
+  /// Nearest-frame resample to [newHop] so tracks from different sample
+  /// rates can be compared.
+  PitchTrack resampled(double newHop) {
+    if ((newHop - hopSeconds).abs() < 1e-9) return this;
+    final n = (durationSeconds / newHop).floor();
+    return PitchTrack(newHop, [
+      for (var i = 0; i < n; i++)
+        hz[(i * newHop / hopSeconds).round().clamp(0, length - 1)]
+    ]);
+  }
+
   /// Returns a track delayed by [seconds] (positive) or advanced (negative),
   /// keeping length. Vacated frames are unvoiced.
   PitchTrack shifted(double seconds) {
