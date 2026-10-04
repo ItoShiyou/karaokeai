@@ -4,12 +4,12 @@ import 'dart:typed_data';
 import 'package:karaokeai_core/karaokeai_core.dart';
 import 'package:test/test.dart';
 
-double rms(Float64List x) =>
+double rms(Float32List x) =>
     math.sqrt(x.fold(0.0, (a, v) => a + v * v) / x.length);
 
 void main() {
   const sr = 16000;
-  Float64List tone(double hz, int n) => Float64List.fromList(
+  Float32List tone(double hz, int n) => Float32List.fromList(
       [for (var i = 0; i < n; i++) 0.4 * math.sin(2 * math.pi * hz * i / sr)]);
 
   test('WAV round trip', () {
@@ -28,8 +28,8 @@ void main() {
   test('centre-panned voice is removed, side instrument kept', () {
     final voice = tone(440, sr); // identical in L and R
     final guitar = tone(1500, sr); // only left
-    final l = Float64List.fromList([for (var i = 0; i < sr; i++) voice[i] + guitar[i]]);
-    final r = Float64List.fromList(voice);
+    final l = Float32List.fromList([for (var i = 0; i < sr; i++) voice[i] + guitar[i]]);
+    final r = Float32List.fromList(voice);
     final acc = removeCenterVocals(PcmAudio(sr, [l, r]));
     // Correlate with each tone: |mean(x * sin)| measures that component.
     double corr(double hz) => (Iterable<int>.generate(sr)

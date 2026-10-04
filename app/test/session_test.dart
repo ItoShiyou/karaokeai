@@ -10,7 +10,7 @@ import 'package:karaokeai_core/karaokeai_core.dart';
 
 const sr = 16000;
 
-Float64List _tone(double hz, double sec) => Float64List.fromList([
+Float32List _tone(double hz, double sec) => Float32List.fromList([
   for (var i = 0; i < sec * sr; i++) 0.4 * math.sin(2 * math.pi * hz * i / sr),
 ]);
 

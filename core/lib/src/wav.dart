@@ -1,10 +1,11 @@
 import 'dart:typed_data';
 
-/// Decoded PCM audio: [channels] lists of samples in -1..1.
+/// Decoded PCM audio: [channels] lists of samples in -1..1 (float32 to keep
+/// full-length songs small on phones).
 class PcmAudio {
   PcmAudio(this.sampleRate, this.channels);
   final int sampleRate;
-  final List<Float64List> channels;
+  final List<Float32List> channels;
   int get length => channels.isEmpty ? 0 : channels.first.length;
   double get seconds => length / sampleRate;
 }
@@ -38,7 +39,7 @@ PcmAudio decodeWav(Uint8List bytes) {
     throw const FormatException('unsupported WAV (need 16-bit PCM)');
   }
   final frames = dataLen! ~/ (2 * ch);
-  final out = List.generate(ch, (_) => Float64List(frames));
+  final out = List.generate(ch, (_) => Float32List(frames));
   for (var i = 0; i < frames; i++) {
     for (var c = 0; c < ch; c++) {
       out[c][i] = bd.getInt16(dataOff + (i * ch + c) * 2, Endian.little) / 32768;

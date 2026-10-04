@@ -75,7 +75,7 @@ void main() {
         case 'currentRoute':
           return 'bluetooth';
         case 'playAndRecord':
-          final cap = Float64List(click.length + delay);
+          final cap = Float32List(click.length + delay);
           for (var i = 0; i < click.length; i++) {
             cap[i + delay] = click[i] * 0.3;
           }
@@ -98,7 +98,7 @@ void main() {
     messenger.setMockMethodCallHandler(ch, (c) async {
       final dst = (c.arguments as Map)['dst'] as String;
       File(dst).writeAsBytesSync(
-        encodeWav(PcmAudio(8000, [Float64List(100), Float64List(100)])),
+        encodeWav(PcmAudio(8000, [Float32List(100), Float32List(100)])),
       );
       return null;
     });

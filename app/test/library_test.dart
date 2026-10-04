@@ -10,10 +10,10 @@ Uint8List _mp3() => Uint8List.fromList(List.filled(64, 1));
 
 PcmAudio _stereo() {
   const sr = 8000;
-  final v = Float64List.fromList([
+  final v = Float32List.fromList([
     for (var i = 0; i < sr; i++) 0.3 * math.sin(2 * math.pi * 440 * i / sr),
   ]);
-  return PcmAudio(sr, [v, Float64List.fromList(v)]);
+  return PcmAudio(sr, [v, Float32List.fromList(v)]);
 }
 
 void main() {

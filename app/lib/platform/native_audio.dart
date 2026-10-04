@@ -122,8 +122,8 @@ class PlatformAudioEngine implements AudioEngine {
 }
 
 /// 1.5s of silence with a short decaying noise burst at 0.2s.
-Float64List makeClickTrack({int sampleRate = PlatformAudioEngine.recordRate}) {
-  final out = Float64List((sampleRate * 1.5).round());
+Float32List makeClickTrack({int sampleRate = PlatformAudioEngine.recordRate}) {
+  final out = Float32List((sampleRate * 1.5).round());
   final rnd = math.Random(7);
   final start = (sampleRate * 0.2).round();
   final len = (sampleRate * 0.01).round();
