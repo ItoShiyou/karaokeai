@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - name: core
+        working-directory: core
+        run: |
+          dart pub get
+          dart analyze
+          dart test
+      - name: app
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+  ios-build:
+    # Compiles the Swift native layer (AppDelegate.swift) without signing.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - name: Build iOS (no codesign)
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter build ios --debug --no-codesign
