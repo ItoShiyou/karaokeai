@@ -38,6 +38,7 @@ final class KaraokeAudio: NSObject, FlutterStreamHandler, AVSpeechSynthesizerDel
   private var finishing = false
   private var playResult: FlutterResult?
   private var recordRate: Double = 16000
+  private var observers: [NSObjectProtocol] = []
 
   init(messenger: FlutterBinaryMessenger) {
     super.init()
@@ -170,6 +171,11 @@ final class KaraokeAudio: NSObject, FlutterStreamHandler, AVSpeechSynthesizerDel
     let busy = engine != nil
     lock.unlock()
     if busy { return result(FlutterError(code: "busy", message: "session running", details: nil)) }
+    // Without mic permission the input format is invalid and installTap raises an
+    // Objective-C exception (uncatchable in Swift) that kills the app.
+    if !micGranted() {
+      return result(FlutterError(code: "permission", message: "microphone", details: nil))
+    }
     do {
       try configureSession()
       let file = try AVAudioFile(forReading: URL(fileURLWithPath: path))
@@ -180,6 +186,9 @@ final class KaraokeAudio: NSObject, FlutterStreamHandler, AVSpeechSynthesizerDel
 
       let input = eng.inputNode
       let inFormat = input.outputFormat(forBus: 0)
+      if inFormat.sampleRate <= 0 || inFormat.channelCount == 0 {
+        return result(FlutterError(code: "format", message: "no input", details: nil))
+      }
       guard let target = AVAudioFormat(
         commonFormat: .pcmFormatInt16, sampleRate: recordRate, channels: 1, interleaved: true),
         let converter = AVAudioConverter(from: inFormat, to: target)
@@ -218,6 +227,7 @@ final class KaraokeAudio: NSObject, FlutterStreamHandler, AVSpeechSynthesizerDel
         }
       }
 
+      observeInterruptions(engine: eng)
       try eng.start()
       node.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
         // Keep recording briefly so output latency doesn't cut off the tail.
@@ -259,6 +269,34 @@ final class KaraokeAudio: NSObject, FlutterStreamHandler, AVSpeechSynthesizerDel
     engine = nil
     player = nil
     lock.unlock()
+    observers.forEach { NotificationCenter.default.removeObserver($0) }
+    observers = []
+  }
+
+  private func micGranted() -> Bool {
+    if #available(iOS 17.0, *) {
+      return AVAudioApplication.shared.recordPermission == .granted
+    }
+    return AVAudioSession.sharedInstance().recordPermission == .granted
+  }
+
+  /// A phone call / Siri, or the output device disappearing (e.g. Bluetooth drops),
+  /// stops the engine. End the session with what was recorded so far, instead of
+  /// leaving the Dart-side future pending forever.
+  private func observeInterruptions(engine eng: AVAudioEngine) {
+    let nc = NotificationCenter.default
+    let end: (Notification) -> Void = { [weak self] _ in self?.finishSession() }
+    observers = [
+      nc.addObserver(
+        forName: AVAudioSession.interruptionNotification, object: nil, queue: .main
+      ) { [weak self] note in
+        let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+        if raw == AVAudioSession.InterruptionType.began.rawValue { self?.finishSession() }
+      },
+      nc.addObserver(
+        forName: Notification.Name.AVAudioEngineConfigurationChange, object: eng, queue: .main,
+        using: end),
+    ]
   }
 
   // MARK: Decode
