@@ -1,7 +1,7 @@
 # 実機検証手順
 
 ネイティブ層（`app/android/.../*.kt`、`app/ios/Runner/AppDelegate.swift`）は、この開発環境では実機で動かせていません。
-検証状況: Kotlin = Android 15 APIに対してコンパイル確認のみ / Swift = **コンパイル未確認**。
+検証状況: Kotlin = Android 15 APIに対してコンパイル確認のみ / Swift = GitHub Actions（macOS）で `flutter build ios --no-codesign` が成功（コンパイル確認済み。動作は実機未確認）。
 
 ## 事前準備
 - Android: Android 10以上、Android Studio（または `flutter build apk --debug`）
