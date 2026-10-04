@@ -29,8 +29,9 @@ class _LyricsScreenState extends State<LyricsScreen> {
   @override
   void initState() {
     super.initState();
-    final rec =
-        widget.library.records.firstWhere((r) => r.song.id == widget.song.id);
+    final rec = widget.library.records.firstWhere(
+      (r) => r.song.id == widget.song.id,
+    );
     _c = TextEditingController(text: rec.lyrics);
   }
 
@@ -49,25 +50,28 @@ class _LyricsScreenState extends State<LyricsScreen> {
           ? const Center(child: Text('走行中は歌詞を表示できません'))
           : Padding(
               padding: const EdgeInsets.all(16),
-              child: Column(children: [
-                Expanded(
-                  child: TextField(
-                    controller: _c,
-                    maxLines: null,
-                    expands: true,
-                    decoration: const InputDecoration(
-                        hintText: 'ご自身で用意した歌詞を貼り付けてください'),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _c,
+                      maxLines: null,
+                      expands: true,
+                      decoration: const InputDecoration(
+                        hintText: 'ご自身で用意した歌詞を貼り付けてください',
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: () async {
-                    await widget.library.setLyrics(widget.song, _c.text);
-                    if (context.mounted) Navigator.of(context).pop();
-                  },
-                  child: const Text('保存'),
-                ),
-              ]),
+                  const SizedBox(height: 8),
+                  FilledButton(
+                    onPressed: () async {
+                      await widget.library.setLyrics(widget.song, _c.text);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    child: const Text('保存'),
+                  ),
+                ],
+              ),
             ),
     );
   }

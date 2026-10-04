@@ -44,7 +44,8 @@ class FilePersistence implements Persistence {
   Future<Map<String, Object?>?> load() async {
     if (!await file.exists()) return null;
     try {
-      return (jsonDecode(await file.readAsString()) as Map).cast<String, Object?>();
+      return (jsonDecode(await file.readAsString()) as Map)
+          .cast<String, Object?>();
     } catch (_) {
       return null; // corrupt file: start fresh rather than crash
     }
@@ -83,14 +84,15 @@ class Library extends ChangeNotifier {
     Decoder? decoder,
     this.workDir,
     Entitlement? entitlement,
-  })  : _readHead = headReader ?? readHead,
-        latency = latency ?? InMemoryLatencyStore(),
-        _decoder = decoder ?? decodeWavFile,
-        entitlement = entitlement ?? Entitlement();
+  }) : _readHead = headReader ?? readHead,
+       latency = latency ?? InMemoryLatencyStore(),
+       _decoder = decoder ?? decodeWavFile,
+       entitlement = entitlement ?? Entitlement();
 
   final HeadReader _readHead;
   final Persistence? _persistence;
   final Decoder _decoder;
+  Decoder get decoder => _decoder;
   final LatencyStore latency;
   final Entitlement entitlement;
 
@@ -117,12 +119,14 @@ class Library extends ChangeNotifier {
     records.clear();
     for (final e in (j['songs'] as List? ?? const [])) {
       final m = (e as Map).cast<String, Object?>();
-      records.add(SongRecord(
-        song: Song(id: m['id'] as String, title: m['title'] as String),
-        sourcePath: m['source'] as String,
-        accompanimentPath: m['accompaniment'] as String?,
-        lyrics: (m['lyrics'] as String?) ?? '',
-      ));
+      records.add(
+        SongRecord(
+          song: Song(id: m['id'] as String, title: m['title'] as String),
+          sourcePath: m['source'] as String,
+          accompanimentPath: m['accompaniment'] as String?,
+          lyrics: (m['lyrics'] as String?) ?? '',
+        ),
+      );
     }
     final lat = (j['latency'] as Map?)?.cast<String, Object?>() ?? const {};
     for (final k in _outputs) {
@@ -148,7 +152,7 @@ class Library extends ChangeNotifier {
             'source': r.sourcePath,
             'accompaniment': r.accompanimentPath,
             'lyrics': r.lyrics,
-          }
+          },
       ],
       'latency': {
         for (final k in _outputs)
@@ -177,7 +181,12 @@ class Library extends ChangeNotifier {
     final id = '${DateTime.now().microsecondsSinceEpoch}-${records.length}';
     final dot = file.name.lastIndexOf('.');
     final title = dot > 0 ? file.name.substring(0, dot) : file.name;
-    records.add(SongRecord(song: Song(id: id, title: title), sourcePath: file.path));
+    records.add(
+      SongRecord(
+        song: Song(id: id, title: title),
+        sourcePath: file.path,
+      ),
+    );
     notifyListeners();
     await _save();
     return null;

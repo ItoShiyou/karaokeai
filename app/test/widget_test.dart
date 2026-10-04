@@ -6,10 +6,13 @@ import 'package:karaokeai/screens/home_screen.dart';
 import 'package:karaokeai/state/library.dart';
 
 Uint8List _mp4(String extra) => Uint8List.fromList(
-    '${String.fromCharCodes([0, 0, 0, 20])}ftypM4A ${'\u0000' * 8}$extra'.codeUnits);
+  '${String.fromCharCodes([0, 0, 0, 20])}ftypM4A ${'\u0000' * 8}$extra'
+      .codeUnits,
+);
 
 Widget _app(Library lib, PickedFile file) => MaterialApp(
-    home: HomeScreen(library: lib, pickFile: () async => file));
+  home: HomeScreen(library: lib, pickFile: () async => file),
+);
 
 void main() {
   testWidgets('imports a normal file, then opens pocket mode', (tester) async {

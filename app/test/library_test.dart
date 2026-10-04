@@ -10,8 +10,9 @@ Uint8List _mp3() => Uint8List.fromList(List.filled(64, 1));
 
 PcmAudio _stereo() {
   const sr = 8000;
-  final v = Float64List.fromList(
-      [for (var i = 0; i < sr; i++) 0.3 * math.sin(2 * math.pi * 440 * i / sr)]);
+  final v = Float64List.fromList([
+    for (var i = 0; i < sr; i++) 0.3 * math.sin(2 * math.pi * 440 * i / sr),
+  ]);
   return PcmAudio(sr, [v, Float64List.fromList(v)]);
 }
 
@@ -21,11 +22,11 @@ void main() {
   tearDown(() => tmp.deleteSync(recursive: true));
 
   Library make({Persistence? p}) => Library(
-        headReader: (_) async => _mp3(),
-        decoder: (_) async => _stereo(),
-        persistence: p,
-        workDir: Directory('${tmp.path}/acc'),
-      );
+    headReader: (_) async => _mp3(),
+    decoder: (_) async => _stereo(),
+    persistence: p,
+    workDir: Directory('${tmp.path}/acc'),
+  );
 
   test('free tier allows 3 songs then blocks; purchase unlocks', () async {
     final lib = make();

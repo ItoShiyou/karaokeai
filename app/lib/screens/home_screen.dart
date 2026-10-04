@@ -5,16 +5,25 @@ import 'package:karaokeai_core/karaokeai_core.dart';
 import '../state/library.dart';
 import 'latency_screen.dart';
 import 'lyrics_screen.dart';
+import '../platform/native_audio.dart';
+import '../state/session.dart';
 import 'pocket_screen.dart';
 
 /// Pre-departure screen: import songs, build the setlist, start pocket mode.
 class HomeScreen extends StatefulWidget {
-  HomeScreen({super.key, Library? library, FilePickerFn? pickFile})
-      : library = library ?? Library(),
-        pickFile = pickFile ?? _defaultPick;
+  HomeScreen({
+    super.key,
+    Library? library,
+    FilePickerFn? pickFile,
+    this.engine,
+    this.speaker,
+  }) : library = library ?? Library(),
+       pickFile = pickFile ?? _defaultPick;
 
   final Library library;
   final FilePickerFn pickFile;
+  final PlatformAudioEngine? engine;
+  final Speaker? speaker;
 
   static Future<PickedFile?> _defaultPick() async {
     final r = await FilePicker.pickFiles(type: FileType.audio);
@@ -34,7 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
     if (file == null) return;
     final error = await widget.library.importFile(file);
     if (error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(error)));
     }
   }
 
@@ -60,14 +70,24 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('停車中ですか？'),
         content: const Text('歌詞の表示・編集は停車中のみ行ってください。'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('いいえ')),
-          TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('停車中です')),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('いいえ'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('停車中です'),
+          ),
         ],
       ),
     );
     if (ok != true || !mounted) return;
-    await Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (_) => LyricsScreen(library: widget.library, song: s, speedKmh: 0)));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            LyricsScreen(library: widget.library, song: s, speedKmh: 0),
+      ),
+    );
   }
 
   @override
@@ -82,8 +102,12 @@ class _HomeScreenState extends State<HomeScreen> {
             IconButton(
               tooltip: '遅延補正',
               icon: const Icon(Icons.timer),
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (_) => LatencyScreen(library: lib))),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      LatencyScreen(library: lib, engine: widget.engine),
+                ),
+              ),
             ),
             IconButton(
               tooltip: '曲を追加',
@@ -102,23 +126,26 @@ class _HomeScreenState extends State<HomeScreen> {
             for (final s in lib.songs)
               ListTile(
                 title: Text(s.title),
-                subtitle: Text(lib.records
-                        .firstWhere((r) => r.song.id == s.id)
-                        .processed
-                    ? '声除去済み'
-                    : '未処理'),
+                subtitle: Text(
+                  lib.records.firstWhere((r) => r.song.id == s.id).processed
+                      ? '声除去済み'
+                      : '未処理',
+                ),
                 onTap: () => _process(s),
-                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                  IconButton(
-                    tooltip: '歌詞',
-                    icon: const Icon(Icons.lyrics_outlined),
-                    onPressed: () => _openLyrics(s),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => lib.remove(s),
-                  ),
-                ]),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      tooltip: '歌詞',
+                      icon: const Icon(Icons.lyrics_outlined),
+                      onPressed: () => _openLyrics(s),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => lib.remove(s),
+                    ),
+                  ],
+                ),
               ),
             const Padding(
               padding: EdgeInsets.all(16),
@@ -131,9 +158,16 @@ class _HomeScreenState extends State<HomeScreen> {
           label: const Text('ポケットモード開始'),
           onPressed: lib.songs.isEmpty
               ? null
-              : () => Navigator.of(context).push(MaterialPageRoute<void>(
-                    builder: (_) => PocketScreen(setlist: Setlist(lib.songs)),
-                  )),
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => PocketScreen(
+                      library: lib,
+                      setlist: Setlist(lib.songs),
+                      engine: widget.engine,
+                      speaker: widget.speaker,
+                    ),
+                  ),
+                ),
         ),
       ),
     );

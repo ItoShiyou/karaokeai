@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../platform/native_audio.dart';
 import '../state/library.dart';
 
 /// Manual latency adjustment per output (car / home speaker / earphones).
 class LatencyScreen extends StatefulWidget {
-  const LatencyScreen({super.key, required this.library});
+  const LatencyScreen({super.key, required this.library, this.engine});
   final Library library;
+  final PlatformAudioEngine? engine;
 
   @override
   State<LatencyScreen> createState() => _LatencyScreenState();
@@ -14,6 +16,30 @@ class LatencyScreen extends StatefulWidget {
 class _LatencyScreenState extends State<LatencyScreen> {
   static const outputs = {'car': '車', 'home': '自宅スピーカー', 'earphones': 'イヤホン'};
   String _output = 'car';
+  String? _status;
+
+  Future<void> _measure() async {
+    setState(() => _status = '測定中…');
+    try {
+      final ms = await widget.engine!.measureLatencyMs();
+      if (!mounted) return;
+      if (ms == null) {
+        setState(() => _status = '検出できませんでした。音量を上げて静かな場所で再実行してください。');
+        return;
+      }
+      // Store under the output the OS is actually routing to.
+      final id = widget.engine!.currentOutputId;
+      widget.library.latency.setMs(id, ms);
+      await widget.library.persist();
+      if (!mounted) return;
+      setState(() {
+        _output = id;
+        _status = '${ms.round()} ms を保存しました（${outputs[id] ?? id}）';
+      });
+    } catch (e) {
+      if (mounted) setState(() => _status = '測定に失敗しました: $e');
+    }
+  }
 
   double get _ms => widget.library.latency.getMs(_output) ?? 150;
 
@@ -45,8 +71,18 @@ class _LatencyScreenState extends State<LatencyScreen> {
                   setState(() => widget.library.latency.setMs(_output, v)),
               onChangeEnd: (_) => widget.library.persist(),
             ),
-            const Text('確認用ビートに合わせて声や手拍子で調整します。'
-                '（自動測定は録音エンジン実装後に接続）'),
+            if (widget.engine != null)
+              FilledButton.icon(
+                icon: const Icon(Icons.graphic_eq),
+                label: const Text('自動測定（クリック音を再生して録音）'),
+                onPressed: _measure,
+              ),
+            if (_status != null) Text(_status!),
+            const SizedBox(height: 8),
+            const Text(
+              '自動測定は静かな場所で、実際に使う出力（車のスピーカー等）につないで行ってください。'
+              '結果は手動スライダーで微調整できます。',
+            ),
           ],
         ),
       ),
